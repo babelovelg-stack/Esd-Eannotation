@@ -1,0 +1,19 @@
+{
+  "name": "Esd-Eannotation",
+  "id": "1643518934362352424",
+  "api": "1.0.0",
+  "main": "dist/main.js",
+  "ui": "dist/ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  },
+  "relaunchButtons": [
+    {
+      "command": "open",
+      "name": "Open Esd-Eannotation",
+      "multipleSelection": true
+    }
+  ]
+}
