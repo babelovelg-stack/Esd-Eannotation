@@ -2,7 +2,7 @@
 
 ## 代码和 manifest
 
-- [ ] 确认 `manifest.json` 的 `id` 为 `1643518934362352424`，且指向 `dist/main.js` 和 `dist/ui.html`。
+- [ ] 确认 `manifest.json` 的 `id` 为 `1671594491317346512`，且指向 `dist/main.js` 和 `dist/ui.html`。
 - [ ] 确认插件名称为 `Esd-Eannotation`，relaunch 标签为 `Open Esd-Eannotation`，`editorType` 为 `["figma"]`。
 - [ ] 确认 `networkAccess.allowedDomains` 为 `["none"]`。
 - [ ] 运行品牌兼容性校验：
