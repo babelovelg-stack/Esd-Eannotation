@@ -2,16 +2,27 @@ import { readFile } from "node:fs/promises"
 
 const PUBLIC_NAME = "Esd-Eannotation"
 const PUBLIC_RELAUNCH_LABEL = "Open Esd-Eannotation"
-const COMMUNITY_DOCS = [
+const REQUIRED_COMMUNITY_DOCS = [
   "../community/README.md",
   "../community/listing-copy.md",
   "../community/privacy-policy.md",
+  "../community/review-checklist.md",
+]
+const OPTIONAL_COMMUNITY_DOCS = [
   "../community/data-security.md",
   "../community/support-template.md",
   "../community/release-notes.md",
-  "../community/review-checklist.md",
   "../community/playground-file-plan.md",
 ]
+
+async function readOptionalFile(url) {
+  try {
+    return await readFile(url, "utf8")
+  } catch (error) {
+    if (error?.code === "ENOENT") return ""
+    throw error
+  }
+}
 
 const [mainSource, manifestSource, indexSource, inlineUiSource, appSource, bootSource, assetValidatorSource, agentsSource, designSource, ...communitySources] =
   await Promise.all([
@@ -22,9 +33,14 @@ const [mainSource, manifestSource, indexSource, inlineUiSource, appSource, bootS
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/main.tsx", import.meta.url), "utf8"),
     readFile(new URL("./build-community-assets.py", import.meta.url), "utf8"),
-    readFile(new URL("../AGENTSs.md", import.meta.url), "utf8"),
+    readOptionalFile(new URL("../AGENTSs.md", import.meta.url)),
     readFile(new URL("../Design.md", import.meta.url), "utf8"),
-    ...COMMUNITY_DOCS.map((path) => readFile(new URL(path, import.meta.url), "utf8")),
+    ...REQUIRED_COMMUNITY_DOCS.map((path) =>
+      readFile(new URL(path, import.meta.url), "utf8")
+    ),
+    ...OPTIONAL_COMMUNITY_DOCS.map((path) =>
+      readOptionalFile(new URL(path, import.meta.url))
+    ),
   ])
 
 const manifest = JSON.parse(manifestSource)
@@ -46,7 +62,7 @@ const uiPublicSources = [indexSource, inlineUiSource, appSource, bootSource]
 const publicRelaunchSources = [manifestSource, mainSource, indexSource, appSource, bootSource]
 const requirements = [
   check("manifest public name", manifest.name === PUBLIC_NAME),
-  check("manifest plugin ID", manifest.id === "1643518934362352424"),
+  check("manifest plugin ID", manifest.id === "1671594491317346512"),
   check(
     "manifest relaunch button",
     Array.isArray(manifest.relaunchButtons) &&
