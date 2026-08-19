@@ -1,14 +1,15 @@
 import {
   getAnnotationPalette,
   getTagPalette,
+  annotationCanvasName,
   contentWidthForDesignReferences,
   imageHeightForWidth,
   inferAnnotationModeFromAncestry,
-  localAnnotationCardName,
+  annotationCardName,
   nextBadgeNumber,
   normalizeAnnotationTagId,
   normalizeWarningLevel,
-  resolveLocalAnnotationCardName,
+  resolveAnnotationCardName,
   tagDefinitionForId,
   type AnnotationPalette,
   type AnnotationMode,
@@ -215,11 +216,14 @@ async function createAnnotation(message: CreateAnnotationMessage) {
       node.id,
       analysis.mode
     )
+    const canvasName = annotationCanvasName({
+      mode: analysis.mode,
+      sourceName: node.name,
+      outerFrameName: analysis.outerFrame?.name ?? null,
+    })
 
     if (existingAnnotation) {
-      if (analysis.mode === "local" && analysis.outerFrame) {
-        updateLocalCardName(existingAnnotation.card, analysis.outerFrame.name)
-      }
+      updateAnnotationCardName(existingAnnotation.card, canvasName)
       const content = getAnnotationContentFrame(
         existingAnnotation.card,
         analysis.mode
@@ -315,7 +319,7 @@ async function createAnnotation(message: CreateAnnotationMessage) {
       designReferences,
       properties: selectedProperties,
       sourceNode: node,
-      localCanvasName: analysis.outerFrame?.name ?? null,
+      canvasName,
       tagId,
       palette,
     })
@@ -653,6 +657,7 @@ async function reconcileAnnotationIntegrity(
     }
 
     await renumberLocalAnnotations()
+    await syncAnnotationCardNames()
     refreshCurrentPageAnnotationRelaunchData()
   } finally {
     syncAnnotationRegistry()
@@ -675,7 +680,6 @@ async function renumberLocalAnnotations() {
     const palette = getAnnotationPalette({ tagId, warningLevel })
 
     updateAnnoNumber(card, number)
-    await updateLocalCardNameFromSource(card, record.sourceNodeId)
     await updateInternalBadgeNumber(card, number, palette)
     applyAnnotationPalette(card, badge, palette, tagId)
 
@@ -799,28 +803,54 @@ function updateAnnoNumber(node: AnnotationCardNode, number: number) {
   })
 }
 
-function updateLocalCardName(
+function updateAnnotationCardName(
   card: AnnotationCardNode,
   canvasName: string | null
 ) {
-  const nextName = resolveLocalAnnotationCardName(card.name, canvasName)
+  const nextName = resolveAnnotationCardName(card.name, canvasName)
   if (card.name !== nextName) {
     card.name = nextName
   }
 }
 
-async function updateLocalCardNameFromSource(
+async function syncAnnotationCardNames() {
+  const cards = getCurrentPageAnnoNodes().filter((node) => {
+    const data = getAnnoData(node)
+    return (
+      data?.type === "card" && typeof data.sourceNodeId === "string"
+    )
+  })
+
+  for (const card of cards) {
+    const data = getAnnoData(card)
+    if (!data || typeof data.sourceNodeId !== "string") {
+      continue
+    }
+    await updateAnnotationCardNameFromSource(
+      card,
+      data.sourceNodeId,
+      data.mode
+    )
+  }
+}
+
+async function updateAnnotationCardNameFromSource(
   card: AnnotationCardNode,
-  sourceNodeId: string
+  sourceNodeId: string,
+  mode: AnnotationMode | undefined
 ) {
   const sourceNode = await figma.getNodeByIdAsync(sourceNodeId)
   if (!sourceNode || !isSceneNode(sourceNode)) {
-    updateLocalCardName(card, null)
+    updateAnnotationCardName(card, null)
     return
   }
 
-  const outerFrame = analyzeSelection(sourceNode).outerFrame
-  updateLocalCardName(card, outerFrame?.name ?? null)
+  const canvasName = annotationCanvasName({
+    mode,
+    sourceName: sourceNode.name,
+    outerFrameName: analyzeSelection(sourceNode).outerFrame?.name ?? null,
+  })
+  updateAnnotationCardName(card, canvasName)
 }
 
 function isSceneNode(node: BaseNode): node is SceneNode {
@@ -985,7 +1015,7 @@ async function createAnnotationCard({
   designReferences,
   properties,
   sourceNode,
-  localCanvasName,
+  canvasName,
   tagId,
   palette,
 }: {
@@ -996,7 +1026,7 @@ async function createAnnotationCard({
   designReferences: DesignReferenceNode[]
   properties: PropertyOption[]
   sourceNode: SceneNode
-  localCanvasName: string | null
+  canvasName: string | null
   tagId: AnnotationTagId
   palette: AnnotationPalette
 }) {
@@ -1007,17 +1037,11 @@ async function createAnnotationCard({
     designReferences.map((reference) => reference.width)
   )
   const cardWidth = annotationCardWidth(mode, contentWidth)
-  const cardName = (() => {
-    if (mode !== "local") {
-      return "Eannotation / Global Annotation"
-    }
-    if (localCanvasName === null) {
-      throw new Error("无法确定局部标注所属画布")
-    }
-    return localAnnotationCardName(localCanvasName)
-  })()
+  if (canvasName === null) {
+    throw new Error("无法确定标注所属画布")
+  }
   const card = createAutoFrame(
-    cardName,
+    annotationCardName(canvasName),
     mode === "local" ? "HORIZONTAL" : "VERTICAL",
     cardWidth
   )

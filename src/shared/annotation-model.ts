@@ -154,15 +154,27 @@ export const PROPERTY_OPTION_IDS = Object.keys(
 
 const FRAME_LIKE_TYPES = new Set(["FRAME", "COMPONENT", "INSTANCE"])
 
-export function localAnnotationCardName(canvasName: string) {
+export function annotationCardName(canvasName: string) {
   return `Eannotation / ${canvasName}`
 }
 
-export function resolveLocalAnnotationCardName(
+export function annotationCanvasName({
+  mode,
+  sourceName,
+  outerFrameName,
+}: {
+  mode: AnnotationMode | undefined
+  sourceName: string
+  outerFrameName: string | null
+}) {
+  return mode === "local" ? outerFrameName : sourceName
+}
+
+export function resolveAnnotationCardName(
   currentName: string,
   canvasName: string | null
 ) {
-  return canvasName === null ? currentName : localAnnotationCardName(canvasName)
+  return canvasName === null ? currentName : annotationCardName(canvasName)
 }
 
 export type ReferenceValue = {

@@ -83,14 +83,14 @@ const requirements = [
     /const PLUGIN_DATA_KEY = "anno"/.test(mainSource)
   ),
   check(
-    "Eannotation local-card creation convention",
-    /function localAnnotationCardName\(canvasName: string\)[\s\S]*?Eannotation \/ \$\{canvasName\}/.test(
+    "Eannotation canvas-card naming convention",
+    /function annotationCardName\(canvasName: string\)[\s\S]*?Eannotation \/ \$\{canvasName\}/.test(
       annotationModelSource
     ) &&
-      /function resolveLocalAnnotationCardName\([\s\S]*?localAnnotationCardName\(canvasName\)/.test(
+      /function resolveAnnotationCardName\([\s\S]*?annotationCardName\(canvasName\)/.test(
         annotationModelSource
       ) &&
-      /function updateLocalCardName\([\s\S]*?resolveLocalAnnotationCardName\(card\.name, canvasName\)/.test(
+      /function updateAnnotationCardName\([\s\S]*?resolveAnnotationCardName\(card\.name, canvasName\)/.test(
         mainSource
       )
   ),

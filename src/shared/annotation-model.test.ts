@@ -3,6 +3,7 @@ import { argbFromHex, lstarFromArgb } from "@material/material-color-utilities"
 
 import {
   TAG_DEFINITIONS,
+  annotationCanvasName,
   contentWidthForDesignReferences,
   formatCornerSummary,
   formatDimensionWithSizing,
@@ -12,11 +13,11 @@ import {
   imageHeightForWidth,
   inferAnnotationModeFromAncestry,
   isWarningHue,
-  localAnnotationCardName,
+  annotationCardName,
   nextBadgeNumber,
   normalizeAnnotationTagId,
   normalizeWarningLevel,
-  resolveLocalAnnotationCardName,
+  resolveAnnotationCardName,
 } from "./annotation-model"
 
 describe("annotation model", () => {
@@ -27,20 +28,37 @@ describe("annotation model", () => {
     expect(inferAnnotationModeFromAncestry(["SECTION", "PAGE"])).toBe("global")
   })
 
-  it("names local annotation cards after their outer canvas", () => {
-    expect(localAnnotationCardName("登录页")).toBe("Eannotation / 登录页")
-    expect(localAnnotationCardName("Flow / Checkout")).toBe(
+  it("names global and local annotation cards after their canvas", () => {
+    expect(annotationCardName("登录页")).toBe("Eannotation / 登录页")
+    expect(annotationCardName("Flow / Checkout")).toBe(
       "Eannotation / Flow / Checkout"
     )
     expect(
-      resolveLocalAnnotationCardName(
+      resolveAnnotationCardName(
         "Eannotation / Existing canvas",
         "Renamed canvas"
       )
     ).toBe("Eannotation / Renamed canvas")
     expect(
-      resolveLocalAnnotationCardName("Eannotation / Existing canvas", null)
+      resolveAnnotationCardName("Eannotation / Existing canvas", null)
     ).toBe("Eannotation / Existing canvas")
+  })
+
+  it("uses the source name globally and the outer frame name locally", () => {
+    expect(
+      annotationCanvasName({
+        mode: "global",
+        sourceName: "首页",
+        outerFrameName: null,
+      })
+    ).toBe("首页")
+    expect(
+      annotationCanvasName({
+        mode: "local",
+        sourceName: "提交按钮",
+        outerFrameName: "结算页",
+      })
+    ).toBe("结算页")
   })
 
   it("uses variable names before styles and raw fallback values", () => {
