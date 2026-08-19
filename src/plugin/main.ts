@@ -1,12 +1,15 @@
 import {
   getAnnotationPalette,
   getTagPalette,
+  annotationCanvasName,
   contentWidthForDesignReferences,
   imageHeightForWidth,
   inferAnnotationModeFromAncestry,
+  annotationCardName,
   nextBadgeNumber,
   normalizeAnnotationTagId,
   normalizeWarningLevel,
+  resolveAnnotationCardName,
   tagDefinitionForId,
   type AnnotationPalette,
   type AnnotationMode,
@@ -213,8 +216,14 @@ async function createAnnotation(message: CreateAnnotationMessage) {
       node.id,
       analysis.mode
     )
+    const canvasName = annotationCanvasName({
+      mode: analysis.mode,
+      sourceName: node.name,
+      outerFrameName: analysis.outerFrame?.name ?? null,
+    })
 
     if (existingAnnotation) {
+      updateAnnotationCardName(existingAnnotation.card, canvasName)
       const content = getAnnotationContentFrame(
         existingAnnotation.card,
         analysis.mode
@@ -310,6 +319,7 @@ async function createAnnotation(message: CreateAnnotationMessage) {
       designReferences,
       properties: selectedProperties,
       sourceNode: node,
+      canvasName,
       tagId,
       palette,
     })
@@ -647,6 +657,7 @@ async function reconcileAnnotationIntegrity(
     }
 
     await renumberLocalAnnotations()
+    await syncAnnotationCardNames()
     refreshCurrentPageAnnotationRelaunchData()
   } finally {
     syncAnnotationRegistry()
@@ -669,7 +680,6 @@ async function renumberLocalAnnotations() {
     const palette = getAnnotationPalette({ tagId, warningLevel })
 
     updateAnnoNumber(card, number)
-    updateLocalCardName(card, number)
     await updateInternalBadgeNumber(card, number, palette)
     applyAnnotationPalette(card, badge, palette, tagId)
 
@@ -793,11 +803,58 @@ function updateAnnoNumber(node: AnnotationCardNode, number: number) {
   })
 }
 
-function updateLocalCardName(card: AnnotationCardNode, number: number) {
-  const nextName = `Eannotation / Local Annotation ${number}`
+function updateAnnotationCardName(
+  card: AnnotationCardNode,
+  canvasName: string | null
+) {
+  const nextName = resolveAnnotationCardName(card.name, canvasName)
   if (card.name !== nextName) {
     card.name = nextName
   }
+}
+
+async function syncAnnotationCardNames() {
+  const cards = getCurrentPageAnnoNodes().filter((node) => {
+    const data = getAnnoData(node)
+    return (
+      data?.type === "card" && typeof data.sourceNodeId === "string"
+    )
+  })
+
+  for (const card of cards) {
+    const data = getAnnoData(card)
+    if (!data || typeof data.sourceNodeId !== "string") {
+      continue
+    }
+    await updateAnnotationCardNameFromSource(
+      card,
+      data.sourceNodeId,
+      data.mode
+    )
+  }
+}
+
+async function updateAnnotationCardNameFromSource(
+  card: AnnotationCardNode,
+  sourceNodeId: string,
+  mode: AnnotationMode | undefined
+) {
+  const sourceNode = await figma.getNodeByIdAsync(sourceNodeId)
+  if (!sourceNode || !isSceneNode(sourceNode)) {
+    updateAnnotationCardName(card, null)
+    return
+  }
+
+  const canvasName = annotationCanvasName({
+    mode,
+    sourceName: sourceNode.name,
+    outerFrameName: analyzeSelection(sourceNode).outerFrame?.name ?? null,
+  })
+  updateAnnotationCardName(card, canvasName)
+}
+
+function isSceneNode(node: BaseNode): node is SceneNode {
+  return node.type !== "DOCUMENT" && node.type !== "PAGE"
 }
 
 async function updateInternalBadgeNumber(
@@ -958,6 +1015,7 @@ async function createAnnotationCard({
   designReferences,
   properties,
   sourceNode,
+  canvasName,
   tagId,
   palette,
 }: {
@@ -968,6 +1026,7 @@ async function createAnnotationCard({
   designReferences: DesignReferenceNode[]
   properties: PropertyOption[]
   sourceNode: SceneNode
+  canvasName: string | null
   tagId: AnnotationTagId
   palette: AnnotationPalette
 }) {
@@ -978,10 +1037,11 @@ async function createAnnotationCard({
     designReferences.map((reference) => reference.width)
   )
   const cardWidth = annotationCardWidth(mode, contentWidth)
+  if (canvasName === null) {
+    throw new Error("无法确定标注所属画布")
+  }
   const card = createAutoFrame(
-    mode === "local"
-      ? `Eannotation / Local Annotation ${badgeNumber}`
-      : "Eannotation / Global Annotation",
+    annotationCardName(canvasName),
     mode === "local" ? "HORIZONTAL" : "VERTICAL",
     cardWidth
   )
