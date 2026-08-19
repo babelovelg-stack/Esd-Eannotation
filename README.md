@@ -22,6 +22,7 @@ Esd-Eannotation 是一款免费的 Figma 设计交付插件。选择一个图层
 ### 核心能力
 
 - 自动识别全局与局部交付场景，并为局部卡片生成对应的编号标记。
+- 卡片图层名跟随所属画布：全局卡片使用被标注元素名称，局部卡片使用最外层 Frame、Component 或 Instance 名称。
 - 支持文字说明、本地图片上传、剪贴板图片和关联设计稿。
 - 支持宽高、最小/最大尺寸、填充、描边、文字样式、文字颜色、圆角和盒模型。
 - 属性展示优先使用绑定变量，其次使用样式，最后展示原始值。
@@ -58,6 +59,8 @@ Plugins > Development > Import plugin from manifest...
 3. 点击「创建标注」。
 
 顶层元素会在右侧生成全局卡片；位于 Frame、Component 或 Instance 内的元素会在源节点右上角生成编号徽标，并在外层 Frame 右侧生成局部卡片。Section 不决定标注类型，但生成的节点会保留在对应 Section 中。
+
+卡片图层名使用 `Eannotation / <画布名称>`：全局卡片读取被标注元素名称，局部卡片读取最外层画布名称。创建、追加内容或重新打开插件时会同步最新名称；源元素缺失时保留已有卡片名称。
 
 关联设计稿会移动原始节点而不是创建副本；添加的图片会保持原始比例。再次标注同一源元素时，新内容会追加到已有卡片。
 
@@ -124,6 +127,7 @@ It creates visible Figma canvas nodes and does not create or replace native Figm
 ### Features
 
 - Automatically identifies global and local handoff contexts and creates matching numbered markers for local cards.
+- Names card layers after their canvas: global cards use the annotated element name, while local cards use the outermost Frame, Component, or Instance name.
 - Supports text notes, local-image uploads, clipboard images, and related designs.
 - Supports dimensions, min/max size, fills, strokes, typography, text color, radius, and box model.
 - Displays bound variables first, followed by styles, then raw values.
@@ -160,6 +164,8 @@ Then import [`manifest.json`](manifest.json) from the project root.
 3. Click **创建标注** (Create annotation).
 
 A top-level element receives a global card to its right. An element inside a Frame, Component, or Instance receives a numbered badge at the source node's top-right corner and a local card to the outer Frame's right. A Section does not determine annotation type, but generated nodes remain inside the corresponding Section.
+
+Card layers use `Eannotation / <canvas name>`. Global cards read the annotated element name, while local cards read the outermost canvas name. The name is synchronized when creating or appending content and when reopening the plugin; if the source element is missing, the existing card name is preserved.
 
 Related designs move the original nodes instead of creating copies, and added images retain their original aspect ratio. Annotating the same source element again appends content to its existing card.
 

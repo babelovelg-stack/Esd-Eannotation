@@ -8,7 +8,7 @@
 - `privacy-policy.md`：与当前实现一致的隐私说明。
 - `data-security.md`：数据安全披露和发布表单建议答案。
 - `support-template.md`：FAQ 与问题反馈模板；不预设联系信息。
-- `release-notes.md`：首发版本说明。
+- `release-notes.md`：首发与后续版本说明。
 - `review-checklist.md`：技术、视觉、审核检查清单。
 - `playground-file-plan.md`：可选 Playground 文件搭建说明。
 - `assets/icon-128.png`：Community icon，128 × 128px。

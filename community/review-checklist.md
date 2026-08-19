@@ -24,6 +24,8 @@ pnpm build
 
 - [ ] 无选择时显示「请选择设计文件中的元素」；多选时要求只选择一个元素。
 - [ ] 顶层元素创建全局卡片且不创建 badge；Frame 内元素创建局部卡片和源节点右上角 badge。
+- [ ] 全局卡片图层名为 `Eannotation / <被标注元素名称>`；局部卡片图层名为 `Eannotation / <最外层画布名称>`。
+- [ ] 修改源元素或最外层画布名称后，追加内容或重新打开插件会刷新卡片名；源元素缺失时保留旧名称。
 - [ ] 局部卡片位于最外层 Frame 右侧；Section 内生成的节点仍保留在该 Section 内。
 - [ ] 同一元素重复创建时追加内容，不重复创建 badge。
 - [ ] 本地上传和剪贴板图片保持原始比例。
@@ -37,6 +39,7 @@ pnpm build
 - [ ] Category: `Design tools`
 - [ ] Description: 使用 `listing-copy.md` 的中文说明；英文可使用其 supplementary description。
 - [ ] Icon: `community/assets/icon-128.png`
+- [ ] 插件 UI 与 Community icon 均显示同一黑白像素女孩 Logo。
 - [ ] Thumbnail: `community/assets/thumbnail-1920x1080.png`
 - [ ] Carousel:
   - `community/assets/carousel-01-core.png`
