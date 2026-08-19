@@ -24,9 +24,10 @@ async function readOptionalFile(url) {
   }
 }
 
-const [mainSource, manifestSource, indexSource, inlineUiSource, appSource, bootSource, assetValidatorSource, agentsSource, designSource, ...communitySources] =
+const [mainSource, annotationModelSource, manifestSource, indexSource, inlineUiSource, appSource, bootSource, assetValidatorSource, agentsSource, designSource, ...communitySources] =
   await Promise.all([
     readFile(new URL("../src/plugin/main.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/shared/annotation-model.ts", import.meta.url), "utf8"),
     readFile(new URL("../manifest.json", import.meta.url), "utf8"),
     readFile(new URL("../index.html", import.meta.url), "utf8"),
     readFile(new URL("./inline-ui.mjs", import.meta.url), "utf8"),
@@ -83,9 +84,15 @@ const requirements = [
   ),
   check(
     "Eannotation local-card creation convention",
-    /function updateLocalCardName\([\s\S]*?Eannotation \/ Local Annotation \$\{number\}/.test(
-      mainSource
-    )
+    /function localAnnotationCardName\(canvasName: string\)[\s\S]*?Eannotation \/ \$\{canvasName\}/.test(
+      annotationModelSource
+    ) &&
+      /function resolveLocalAnnotationCardName\([\s\S]*?localAnnotationCardName\(canvasName\)/.test(
+        annotationModelSource
+      ) &&
+      /function updateLocalCardName\([\s\S]*?resolveLocalAnnotationCardName\(card\.name, canvasName\)/.test(
+        mainSource
+      )
   ),
   check(
     "Eannotation badge creation convention",

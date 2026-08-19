@@ -12,9 +12,11 @@ import {
   imageHeightForWidth,
   inferAnnotationModeFromAncestry,
   isWarningHue,
+  localAnnotationCardName,
   nextBadgeNumber,
   normalizeAnnotationTagId,
   normalizeWarningLevel,
+  resolveLocalAnnotationCardName,
 } from "./annotation-model"
 
 describe("annotation model", () => {
@@ -23,6 +25,22 @@ describe("annotation model", () => {
       "local"
     )
     expect(inferAnnotationModeFromAncestry(["SECTION", "PAGE"])).toBe("global")
+  })
+
+  it("names local annotation cards after their outer canvas", () => {
+    expect(localAnnotationCardName("登录页")).toBe("Eannotation / 登录页")
+    expect(localAnnotationCardName("Flow / Checkout")).toBe(
+      "Eannotation / Flow / Checkout"
+    )
+    expect(
+      resolveLocalAnnotationCardName(
+        "Eannotation / Existing canvas",
+        "Renamed canvas"
+      )
+    ).toBe("Eannotation / Renamed canvas")
+    expect(
+      resolveLocalAnnotationCardName("Eannotation / Existing canvas", null)
+    ).toBe("Eannotation / Existing canvas")
   })
 
   it("uses variable names before styles and raw fallback values", () => {

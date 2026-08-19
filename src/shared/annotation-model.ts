@@ -154,6 +154,17 @@ export const PROPERTY_OPTION_IDS = Object.keys(
 
 const FRAME_LIKE_TYPES = new Set(["FRAME", "COMPONENT", "INSTANCE"])
 
+export function localAnnotationCardName(canvasName: string) {
+  return `Eannotation / ${canvasName}`
+}
+
+export function resolveLocalAnnotationCardName(
+  currentName: string,
+  canvasName: string | null
+) {
+  return canvasName === null ? currentName : localAnnotationCardName(canvasName)
+}
+
 export type ReferenceValue = {
   variables?: string[]
   style?: string | null
